@@ -20,27 +20,23 @@ RUN apt-get install -y python3-dateutil
 RUN apt-get install -y python3-simplejson
 RUN apt-get install -y python3-webcolors
 
-RUN mkdir /srv/recommendation
-WORKDIR /srv/recommendation
-RUN git clone https://gerrit.wikimedia.org/r/research/recommendation-api
-RUN git clone https://gerrit.wikimedia.org/r/research/recommendation-api/wheels
-
 # Dependencies not available as debian packages
+WORKDIR /srv/recommendation
+RUN git clone https://gerrit.wikimedia.org/r/research/recommendation-api/wheels
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/swagger_spec_validator*.whl
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/strict_rfc3339*.whl
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/rfc3987*.whl
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/bravado_core*.whl
 
+# Install app
+RUN git clone https://gerrit.wikimedia.org/r/research/recommendation-api
+RUN pip3 install --no-deps ./recommendation-api
+
+# Node and bower
 RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN mkdir /etc/recommendation
-
-WORKDIR /srv/recommendation/recommendation-api
-RUN cp recommendation/data/* /etc/recommendation
-RUN sed -i 's|event_logger.*|event_logger = http://localhost/event|' /etc/recommendation/recommendation.ini
-
-WORKDIR /srv/recommendation/recommendation-api/recommendation/web/static
+WORKDIR /srv/recommendation/resources
 RUN npm install bower
-RUN ./node_modules/bower/bin/bower install --allow-root
+RUN ./node_modules/bower/bin/bower install --allow-root /srv/recommendation/recommendation-api/recommendation/web/static/bower.json
 
-WORKDIR /srv/recommendation/recommendation-api
-RUN pip3 install -e . --no-deps
+# Configuration
+RUN sed -i 's|event_logger.*|event_logger = http://localhost/event|' /etc/recommendation/recommendation.ini
