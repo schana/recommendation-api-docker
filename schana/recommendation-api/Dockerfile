@@ -15,7 +15,6 @@ RUN apt-get install -y python3-numpy
 RUN apt-get install -y python3-yaml
 
 # Dependencies of bravado-core
-RUN apt-get install -y python3-jsonschema
 RUN apt-get install -y python3-dateutil
 RUN apt-get install -y python3-simplejson
 RUN apt-get install -y python3-webcolors
@@ -26,6 +25,7 @@ RUN git clone https://gerrit.wikimedia.org/r/research/recommendation-api/wheels
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/swagger_spec_validator*.whl
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/strict_rfc3339*.whl
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/rfc3987*.whl
+RUN pip3 install --use-wheel --no-deps ./wheels/wheels/jsonschema*.whl
 RUN pip3 install --use-wheel --no-deps ./wheels/wheels/bravado_core*.whl
 
 # Install app
@@ -40,3 +40,7 @@ RUN ./node_modules/bower/bin/bower install --allow-root /srv/recommendation/reco
 
 # Configuration
 RUN sed -i 's|event_logger.*|event_logger = http://localhost/event|' /etc/recommendation/recommendation.ini
+RUN sed -i "s|debug=True|debug=True, host='0.0.0.0'|" /etc/recommendation/recommendation.wsgi
+
+EXPOSE 5000
+ENTRYPOINT python3 /etc/recommendation/recommendation.wsgi
